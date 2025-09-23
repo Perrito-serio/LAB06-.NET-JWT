@@ -1,12 +1,23 @@
 using System.Text;
+using Lab06_MunozHerrera.Core.Interfaces;
+using Lab06_MunozHerrera.Core.Services;
+using Lab06_MunozHerrera.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
-using Lab06_MunozHerrera.Core.Interfaces;
-using Lab06_MunozHerrera.Core.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// *** AÑADIR ESTE BLOQUE ***
+// Configurar DbContext para PostgreSQL
+builder.Services.AddDbContext<UniversidadDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Registrar Unit of Work
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+// *************************
 
 // 1. Habilitar el uso de Controladores en lugar de APIs mínimas.
 builder.Services.AddControllers();
@@ -17,7 +28,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddSwaggerGen(options =>
 {
-    // Añadimos una definición de seguridad para que Swagger sepa cómo manejar el token Bearer.
+    // ... el resto de la configuración de Swagger se mantiene igual
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -28,7 +39,6 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer"
     });
 
-    // Añadimos un requisito de seguridad que obliga a usar el token en los endpoints protegidos.
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -46,7 +56,6 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 // 3. Configuración del servicio de autenticación con JWT.
-// Le "enseñamos" a la API cómo debe validar los tokens que reciba.
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -56,7 +65,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            // Aquí se usarán los valores del appsettings.json
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
@@ -64,12 +72,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 // 4. Configuración del servicio de autorización y políticas.
-// Aquí definimos los "permisos" o "roles".
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("Administrador", policy => policy.RequireRole("Admin"));
-    // Podríamos agregar más políticas aquí, por ejemplo:
-    // options.AddPolicy("Vendedor", policy => policy.RequireRole("Vendedor"));
 });
 
 
@@ -84,12 +89,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// 5. Añadir los middlewares de Autenticación y Autorización.
-// ¡El orden es MUY importante! Primero autentica, luego autoriza.
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 6. Mapear los controladores que crearemos más adelante.
 app.MapControllers();
 
 app.Run();

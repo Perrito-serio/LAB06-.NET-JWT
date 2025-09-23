@@ -18,10 +18,10 @@ namespace Lab06_MunozHerrera.Controllers
         }
 
         [HttpPost("login")]
-        [AllowAnonymous] // Este endpoint no requiere token
-        public IActionResult Login([FromBody] LoginRequestDto loginRequest)
+        [AllowAnonymous]
+        public async Task<IActionResult> Login([FromBody] LoginRequestDto loginRequest)
         {
-            var token = _authService.Login(loginRequest);
+            var token = await _authService.Login(loginRequest);
 
             if (token == null)
             {
@@ -32,18 +32,17 @@ namespace Lab06_MunozHerrera.Controllers
         }
         
         [HttpGet("admin-data")]
-        [Authorize(Roles = "Admin")] // Solo accesible para usuarios con el rol "Admin"
+        [Authorize(Roles = "Admin")]
         public IActionResult GetAdminData()
         {
             return Ok("Estos son datos súper secretos solo para administradores.");
         }
         
         [HttpGet("public-data")]
-        [AllowAnonymous] // Cualquiera puede acceder a este endpoint
+        [AllowAnonymous]
         public IActionResult GetPublicData()
         {
             return Ok("Estos son datos públicos para todo el mundo.");
         }
-        
     }
 }

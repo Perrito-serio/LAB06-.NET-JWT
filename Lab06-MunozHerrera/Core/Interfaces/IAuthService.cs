@@ -4,7 +4,6 @@ namespace Lab06_MunozHerrera.Core.Interfaces
 {
     public interface IAuthService
     {
-        // Devuelve el token como string si el login es exitoso, o null si falla.
-        string Login(LoginRequestDto loginRequest);
+        Task<string> Login(LoginRequestDto loginRequest);
     }
 }
