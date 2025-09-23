@@ -5,5 +5,7 @@ namespace Lab06_MunozHerrera.Core.Interfaces
     public interface IAuthService
     {
         Task<string> Login(LoginRequestDto loginRequest);
+        
+        Task<bool> Register(RegisterRequestDto registerRequest);
     }
 }

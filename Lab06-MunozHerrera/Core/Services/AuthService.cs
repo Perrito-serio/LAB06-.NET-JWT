@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using Lab06_MunozHerrera.Core.Interfaces;
 using Lab06_MunozHerrera.DTOs.Request;
+using Lab06_MunozHerrera.Models;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Lab06_MunozHerrera.Core.Services
@@ -10,41 +11,33 @@ namespace Lab06_MunozHerrera.Core.Services
     public class AuthService : IAuthService
     {
         private readonly IConfiguration _configuration;
-        private readonly IUnitOfWork _unitOfWork; // <-- Inyectamos el Unit of Work
+        private readonly IUnitOfWork _unitOfWork;
 
-        // Modificamos el constructor para recibir IUnitOfWork
         public AuthService(IConfiguration configuration, IUnitOfWork unitOfWork)
         {
             _configuration = configuration;
             _unitOfWork = unitOfWork;
         }
-            
-        // El método ahora debe ser asíncrono
+
         public async Task<string> Login(LoginRequestDto loginRequest)
         {
-            // PASO 1: Buscar al usuario por su username
+            // Paso 1: Buscar al usuario en la base de datos por su username.
             var user = await _unitOfWork.UserRepository.FindAsync(u => u.Username == loginRequest.Username);
 
-            if (user == null)
+            // Paso 2: Verificar si el usuario existe Y si la contraseña es correcta.
+            // Usamos BCrypt.Verify para comparar la contraseña enviada con el hash guardado.
+            if (user == null || !BCrypt.Net.BCrypt.Verify(loginRequest.Password, user.PasswordHash))
             {
-                return null; // Usuario no encontrado
-            }
-            
-            // PASO 2: Verificar la contraseña encriptada
-            // Usamos BCrypt para comparar la contraseña enviada con el hash guardado
-            if (!BCrypt.Net.BCrypt.Verify(loginRequest.Password, user.PasswordHash))
-            {
-                return null; // Contraseña incorrecta
+                return null; // Si el usuario no existe o la contraseña no coincide, devolvemos null.
             }
 
-            // PASO 3: Crear los 'claims' con la información del usuario de la BD
+            // Si la validación es exitosa, procedemos a crear el token.
             var claims = new[]
             {
                 new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.Role) // ¡Usamos el rol de la base de datos!
-            }; 
+                new Claim(ClaimTypes.Role, user.Role) // Usamos el rol de la base de datos
+            };
             
-            // El resto del método para generar el token es igual...
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
@@ -58,5 +51,29 @@ namespace Lab06_MunozHerrera.Core.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+        public async Task<bool> Register(RegisterRequestDto registerRequest)
+        {
+            var userExists = await _unitOfWork.UserRepository.FindAsync(u => u.Username == registerRequest.Username);
+            if (userExists != null)
+            {
+                return false;
+            }
+
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(registerRequest.Password);
+
+            var newUser = new User
+            {
+                Username = registerRequest.Username,
+                PasswordHash = passwordHash,
+                Role = registerRequest.Role
+            };
+
+            await _unitOfWork.UserRepository.AddAsync(newUser);
+            await _unitOfWork.CompleteAsync();
+
+            return true;
+        }
     }
 }
+

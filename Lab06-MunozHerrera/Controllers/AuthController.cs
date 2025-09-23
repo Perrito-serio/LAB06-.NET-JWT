@@ -31,6 +31,24 @@ namespace Lab06_MunozHerrera.Controllers
             return Ok(new LoginResponseDto { Token = token });
         }
         
+        // --- INICIO DEL NUEVO MÉTODO DE REGISTRO ---
+        [HttpPost("register")]
+        [Authorize(Roles = "Admin")] // <-- ¡SOLO los usuarios con rol "Admin" pueden acceder a este endpoint!
+        public async Task<IActionResult> Register([FromBody] RegisterRequestDto registerRequest)
+        {
+            var result = await _authService.Register(registerRequest);
+
+            if (!result)
+            {
+                // Si el servicio devuelve 'false' (ej. el usuario ya existe), enviamos un error.
+                return BadRequest("No se pudo registrar al usuario. Es posible que el nombre de usuario ya exista.");
+            }
+
+            // Si todo fue bien, enviamos una respuesta exitosa.
+            return Ok(new { message = "Usuario registrado exitosamente." });
+        }
+        // --- FIN DEL NUEVO MÉTODO DE REGISTRO ---
+
         [HttpGet("admin-data")]
         [Authorize(Roles = "Admin")]
         public IActionResult GetAdminData()
@@ -46,3 +64,4 @@ namespace Lab06_MunozHerrera.Controllers
         }
     }
 }
+
