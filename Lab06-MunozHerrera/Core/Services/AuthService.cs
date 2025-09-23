@@ -30,8 +30,8 @@
                 {
                     new Claim(ClaimTypes.Name, loginRequest.Username),
                     new Claim(ClaimTypes.Role, "Admin") // Asignamos el rol directamente
-                };
-
+                }; 
+                
                 // PASO 3: Obtener la clave secreta desde appsettings.json.
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
                 

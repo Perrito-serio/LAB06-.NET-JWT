@@ -44,5 +44,6 @@ namespace Lab06_MunozHerrera.Controllers
         {
             return Ok("Estos son datos públicos para todo el mundo.");
         }
+        
     }
 }
