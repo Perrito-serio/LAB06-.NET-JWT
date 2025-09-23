@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
+using Lab06_MunozHerrera.Core.Interfaces;
+using Lab06_MunozHerrera.Core.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Habilitar el uso de Controladores en lugar de APIs mínimas.
@@ -10,6 +13,8 @@ builder.Services.AddControllers();
 
 // 2. Configuración de Swagger/OpenAPI para que entienda y use JWT.
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
 builder.Services.AddSwaggerGen(options =>
 {
     // Añadimos una definición de seguridad para que Swagger sepa cómo manejar el token Bearer.
