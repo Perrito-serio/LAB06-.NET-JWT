@@ -10,7 +10,6 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// *** AÑADIR ESTE BLOQUE ***
 // Configurar DbContext para PostgreSQL
 builder.Services.AddDbContext<UniversidadDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
