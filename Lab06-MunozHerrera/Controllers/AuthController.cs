@@ -11,10 +11,12 @@ namespace Lab06_MunozHerrera.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IUnitOfWork _unitOfWork; // Necesario para el endpoint de prueba
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, IUnitOfWork unitOfWork)
         {
             _authService = authService;
+            _unitOfWork = unitOfWork;
         }
 
         [HttpPost("login")]
@@ -22,32 +24,27 @@ namespace Lab06_MunozHerrera.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequestDto loginRequest)
         {
             var token = await _authService.Login(loginRequest);
-
             if (token == null)
             {
                 return Unauthorized("Credenciales inválidas.");
             }
-
             return Ok(new LoginResponseDto { Token = token });
         }
         
-        // --- INICIO DEL NUEVO MÉTODO DE REGISTRO ---
+        // --- SEGURIDAD RESTAURADA ---
+        // Se ha vuelto a colocar [Authorize(Roles = "Admin")].
+        // Ahora, solo un usuario autenticado con el rol "Admin" puede crear nuevos usuarios.
         [HttpPost("register")]
-        [Authorize(Roles = "Admin")] // <-- ¡SOLO los usuarios con rol "Admin" pueden acceder a este endpoint!
+        [Authorize(Roles = "Admin")] 
         public async Task<IActionResult> Register([FromBody] RegisterRequestDto registerRequest)
         {
             var result = await _authService.Register(registerRequest);
-
             if (!result)
             {
-                // Si el servicio devuelve 'false' (ej. el usuario ya existe), enviamos un error.
                 return BadRequest("No se pudo registrar al usuario. Es posible que el nombre de usuario ya exista.");
             }
-
-            // Si todo fue bien, enviamos una respuesta exitosa.
             return Ok(new { message = "Usuario registrado exitosamente." });
         }
-        // --- FIN DEL NUEVO MÉTODO DE REGISTRO ---
 
         [HttpGet("admin-data")]
         [Authorize(Roles = "Admin")]
@@ -61,6 +58,22 @@ namespace Lab06_MunozHerrera.Controllers
         public IActionResult GetPublicData()
         {
             return Ok("Estos son datos públicos para todo el mundo.");
+        }
+
+        // Puedes eliminar este endpoint de prueba si lo deseas, ya que cumplió su propósito.
+        [HttpGet("get-all-users-test")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAllUsersTest()
+        {
+            try
+            {
+                var users = await _unitOfWork.UserRepository.GetAllAsync();
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error al conectar o leer la base de datos: {ex.Message}");
+            }
         }
     }
 }

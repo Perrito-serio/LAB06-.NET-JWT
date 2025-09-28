@@ -7,10 +7,6 @@ namespace Lab06_MunozHerrera.Data;
 
 public partial class UniversidadDbContext : DbContext
 {
-    public UniversidadDbContext()
-    {
-    }
-
     public UniversidadDbContext(DbContextOptions<UniversidadDbContext> options)
         : base(options)
     {
