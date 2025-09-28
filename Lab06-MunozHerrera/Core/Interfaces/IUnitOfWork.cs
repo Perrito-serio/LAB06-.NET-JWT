@@ -4,7 +4,7 @@ namespace Lab06_MunozHerrera.Core.Interfaces
 {
     public interface IUnitOfWork : IDisposable
     {
-        IGenericRepository<User> UserRepository { get; }
+        IGenericRepository<T> Repository<T>() where T : class;
     
         Task<int> CompleteAsync();
     }

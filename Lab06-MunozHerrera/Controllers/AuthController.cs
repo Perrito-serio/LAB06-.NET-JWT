@@ -59,22 +59,6 @@ namespace Lab06_MunozHerrera.Controllers
         {
             return Ok("Estos son datos públicos para todo el mundo.");
         }
-
-        // Puedes eliminar este endpoint de prueba si lo deseas, ya que cumplió su propósito.
-        [HttpGet("get-all-users-test")]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetAllUsersTest()
-        {
-            try
-            {
-                var users = await _unitOfWork.UserRepository.GetAllAsync();
-                return Ok(users);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error al conectar o leer la base de datos: {ex.Message}");
-            }
-        }
     }
 }
 
