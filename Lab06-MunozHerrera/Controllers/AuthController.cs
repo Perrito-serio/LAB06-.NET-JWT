@@ -11,12 +11,10 @@ namespace Lab06_MunozHerrera.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-        private readonly IUnitOfWork _unitOfWork; // Necesario para el endpoint de prueba
 
-        public AuthController(IAuthService authService, IUnitOfWork unitOfWork)
+        public AuthController(IAuthService authService)
         {
             _authService = authService;
-            _unitOfWork = unitOfWork;
         }
 
         [HttpPost("login")]
@@ -31,9 +29,6 @@ namespace Lab06_MunozHerrera.Controllers
             return Ok(new LoginResponseDto { Token = token });
         }
         
-        // --- SEGURIDAD RESTAURADA ---
-        // Se ha vuelto a colocar [Authorize(Roles = "Admin")].
-        // Ahora, solo un usuario autenticado con el rol "Admin" puede crear nuevos usuarios.
         [HttpPost("register")]
         [Authorize(Roles = "Admin")] 
         public async Task<IActionResult> Register([FromBody] RegisterRequestDto registerRequest)
@@ -61,4 +56,3 @@ namespace Lab06_MunozHerrera.Controllers
         }
     }
 }
-
